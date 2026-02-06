@@ -1,0 +1,47 @@
+# Product Identity Spec
+apiVersion: kanoniv.io/v1
+kind: IdentitySpec
+
+metadata:
+  name: product-master-identity
+  version: "1.0.0"
+  description: Mastering product data across ERP and E-commerce systems
+
+spec:
+  entity: product
+
+  sources:
+    - name: erp_products
+      table: erp.public.products
+      key: sku
+      
+    - name: shopify_products
+      table: shopify.public.products
+      key: variant_sku
+
+  matching:
+    - rule: sku-exact
+      type: exact
+      field: sku
+      weight: 1.0
+      
+    - rule: name-fuzzy
+      type: fuzzy
+      field: product_name
+      algorithm: levenshtein
+      threshold: 0.9
+      weight: 0.5
+
+  survivorship:
+    - field: product_name
+      strategy: source_priority
+      source_priority: [erp_products, shopify_products]
+      
+    - field: description
+      strategy: longest
+      
+    - field: price_usd
+      strategy: most_recent
+
+  blocking:
+    keys: [category_id]
