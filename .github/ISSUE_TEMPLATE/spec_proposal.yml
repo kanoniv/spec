@@ -1,0 +1,29 @@
+name: Spec Change Proposal
+description: Propose a change or addition to the Kanoniv Identity Specification
+labels: ["spec", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Developing a robust identity standard requires community input. Please use this template to propose changes!
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this change solve?
+      description: Explain why this change is needed.
+      placeholder: "e.g., Current spec doesn't support phonetic matching for non-English names."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed change to the spec.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example YAML Snippets
+      description: Show how the new spec would look.
+      render: yaml
