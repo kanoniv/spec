@@ -1,0 +1,63 @@
+# Kanoniv Identity Spec v1
+apiVersion: kanoniv.io/v1
+kind: IdentitySpec
+
+metadata:
+  name: customer-identity
+  version: "1.0.0"
+  description: Unified customer identity across e-commerce and billing systems
+
+spec:
+  entity: customer
+
+  # Data sources to resolve
+  sources:
+    - name: shopify_customers
+      table: raw.shopify.customers
+      key: id
+      
+    - name: stripe_customers
+      table: raw.stripe.customers
+      key: id
+      
+    - name: zendesk_users
+      table: raw.zendesk.users
+      key: id
+
+  # Matching rules (evaluated in order)
+  matching:
+    - rule: email-exact
+      type: exact
+      field: email
+      weight: 0.95
+      
+    - rule: phone-exact
+      type: exact
+      field: phone
+      weight: 0.85
+      
+    - rule: name-fuzzy
+      type: fuzzy
+      field: full_name
+      algorithm: jaro_winkler
+      threshold: 0.88
+      weight: 0.6
+
+  # How to pick the "winning" value when sources conflict
+  survivorship:
+    - field: email
+      strategy: most_recent
+      
+    - field: phone
+      strategy: most_complete
+      
+    - field: full_name
+      strategy: source_priority
+      source_priority: [shopify_customers, stripe_customers, zendesk_users]
+      
+    - field: address
+      strategy: most_complete
+
+  # Performance optimization
+  blocking:
+    keys: [email_domain, phone_area_code]

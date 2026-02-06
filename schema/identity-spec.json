@@ -1,0 +1,218 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://kanoniv.io/schema/identity-spec.json",
+    "title": "Kanoniv Identity Spec",
+    "description": "Schema for Kanoniv identity resolution specifications",
+    "type": "object",
+    "required": [
+        "apiVersion",
+        "kind",
+        "metadata",
+        "spec"
+    ],
+    "properties": {
+        "apiVersion": {
+            "type": "string",
+            "enum": [
+                "kanoniv.io/v1"
+            ],
+            "description": "API version of the spec"
+        },
+        "kind": {
+            "type": "string",
+            "enum": [
+                "IdentitySpec"
+            ],
+            "description": "Kind of resource"
+        },
+        "metadata": {
+            "type": "object",
+            "required": [
+                "name",
+                "version"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*$",
+                    "description": "Unique identifier for this spec"
+                },
+                "version": {
+                    "type": "string",
+                    "pattern": "^\\d+\\.\\d+\\.\\d+$",
+                    "description": "Semantic version of the spec"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Human-readable description"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "description": "Key-value labels for organization"
+                }
+            }
+        },
+        "spec": {
+            "type": "object",
+            "required": [
+                "entity",
+                "sources",
+                "matching"
+            ],
+            "properties": {
+                "entity": {
+                    "type": "string",
+                    "description": "The entity type being resolved (e.g., customer, product)"
+                },
+                "sources": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/Source"
+                    },
+                    "description": "Data sources to resolve"
+                },
+                "matching": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/MatchingRule"
+                    },
+                    "description": "Rules for determining identity matches"
+                },
+                "survivorship": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SurvivorshipRule"
+                    },
+                    "description": "Rules for merging field values"
+                },
+                "blocking": {
+                    "type": "object",
+                    "properties": {
+                        "keys": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "Fields to use for blocking (performance optimization)"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Source": {
+            "type": "object",
+            "required": [
+                "name",
+                "table",
+                "key"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Unique name for this source"
+                },
+                "table": {
+                    "type": "string",
+                    "description": "Fully qualified table name (schema.table)"
+                },
+                "key": {
+                    "type": "string",
+                    "description": "Primary key column"
+                },
+                "filter": {
+                    "type": "string",
+                    "description": "Optional SQL WHERE clause"
+                }
+            }
+        },
+        "MatchingRule": {
+            "type": "object",
+            "required": [
+                "rule",
+                "type",
+                "field"
+            ],
+            "properties": {
+                "rule": {
+                    "type": "string",
+                    "description": "Unique name for this rule"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "exact",
+                        "fuzzy",
+                        "phonetic",
+                        "custom"
+                    ],
+                    "description": "Type of matching algorithm"
+                },
+                "field": {
+                    "type": "string",
+                    "description": "Field to match on"
+                },
+                "algorithm": {
+                    "type": "string",
+                    "enum": [
+                        "jaro_winkler",
+                        "levenshtein",
+                        "soundex",
+                        "metaphone"
+                    ],
+                    "description": "Algorithm for fuzzy/phonetic matching"
+                },
+                "threshold": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Minimum similarity score (0-1)"
+                },
+                "weight": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Weight of this rule in overall score"
+                }
+            }
+        },
+        "SurvivorshipRule": {
+            "type": "object",
+            "required": [
+                "field",
+                "strategy"
+            ],
+            "properties": {
+                "field": {
+                    "type": "string",
+                    "description": "Field to apply survivorship to"
+                },
+                "strategy": {
+                    "type": "string",
+                    "enum": [
+                        "most_recent",
+                        "most_frequent",
+                        "most_complete",
+                        "source_priority",
+                        "longest",
+                        "custom"
+                    ],
+                    "description": "Strategy for selecting the surviving value"
+                },
+                "source_priority": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Source priority order (for source_priority strategy)"
+                }
+            }
+        }
+    }
+}
